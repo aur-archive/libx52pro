@@ -1,0 +1,28 @@
+# Maintainer: ZekeSulastin <zekesulastin+aur@gmail.com>
+pkgname=libx52pro
+pkgver=0.1.2
+pkgrel=2
+pkgdesc="A library to interface with the MFD+LEDs of the Saitek X52 FCS and X52 Pro FCS/Yoke"
+arch=(i686 x86_64)
+url="http://plasma.hasenleithner.at/x52pro/"
+license=('LGPL' 'GPL')
+depends=('libusb-compat')
+install='libx52pro.install'
+source=(${url}x52pro-$pkgver.tar.gz)
+md5sums=('5391f4800fc5d6bab61a4dab1e042fd6')
+
+_group=users # This group will have write-access to the joystick itself, necessary to change MFD/LED settings.  Change if necessary, but 'users' should work without reconfiguration for most setups.
+
+build() {
+  cd "$srcdir/x52pro-$pkgver"
+  sed -i -e s/SYSFS/ATTR/g 99-x52pro.rules # Replacing old syntax
+  sed -i -e s/plugdev/$_group/g 99-x52pro.rules # Allow user-configurable group for access
+  sed -i -e s/usb_device/usb/g 99-x52pro.rules # usb_device is deprecated
+  sed -i -e s@etc/udev@usr/lib/udev@g Makefile # Packaged udev rules go in /usr/lib
+  make
+}
+
+package() {
+  cd "$srcdir/x52pro-$pkgver"
+  make DESTDIR="$pkgdir/" install
+}
